@@ -1,131 +1,134 @@
+<!DOCTYPE html>
 <html>
-    <head>
-        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-        <title>(CC)</title>
+  <head>
+    <title>mobiForge geolocation map API demo</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <style>
+      body,html {}
+       #map{
+        width: 300px;
+        height: 500px;
+      }}
+    </style>
     <script src="/socket.io/socket.io.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?sensor=true"></script>
     <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
-    <script type="text/javascript" src="vivagraph.min.js" ></script>
-      
-        <script type='text/javascript'>
-            /*global Viva*/
-
-           function beginRemoveNodesLoop(graph,terms){
-             console.log("inbeginRemoveNodesLoop1",graph,terms);
-               var nodesLeft = [];
-               graph.forEachNode(function(node){
-                   nodesLeft.push(node.id);
-               });
-               var removeInterval = setInterval(function(){
-                    var nodesCount = nodesLeft.length;
-                    if (nodesCount > 0){
-                        var nodeToRemove = Math.min((Math.random() * nodesCount) << 0, nodesCount - 1);
-
-                        graph.removeNode(nodesLeft[nodeToRemove]);
-                        nodesLeft.splice(nodeToRemove, 1);
-                    }
-                 console.log("inbeginRemoveNodesLoopXXX",nodesCount,graph,terms);
-                    if (nodesCount === 0) {
-                        clearInterval(removeInterval);
-                        setTimeout(function(){
-                            addNodes(graph,terms);
-                        }, 50);
-                    }
-                }, 50);
-           }
-
-          function addNodes(graph,terms,term){
- //           console.log("in beginAddNodesLoop",terms,graph)
-                  if(terms) {
- //                  console.log("in terms",terms,terms.length);
-                    for (var i = 0; i < terms.length; i++) {
-                      if (term != terms[i]) {
-//                        console.log("addLink",term,terms[i])
-                        graph.addLink(term,terms[i]);
-                      }
-                    }
-                  }
-           };
-
-           function onLoad() {
- 
-           graph = Viva.Graph.graph();
-var graphics = Viva.Graph.View.svgGraphics(),
-    nodeSize = 24;
-graphics.node(function(node) {
-  var ui = Viva.Graph.svg('g'),
-      svgText = Viva.Graph.svg('text').attr('y', '-4px').text(node.id);
-      src = '';
-  
-    domImg = new Image();
-    domImg.onload = function () {        
-
-        svgText.text(node.id);
-    };
-    domImg.src = src;
-    ui.append(svgText);
-    return ui;
-}).placeNode(function(nodeUI, pos) {
-    nodeUI.attr('transform', 
-                'translate(' + 
-                      (pos.x - nodeSize) + ',' + (pos.y - nodeSize/2+20) + 
-                ')');
-}); 
-var renderer = Viva.Graph.View.renderer(graph, {
-        graphics : graphics
-    });
-renderer.run();
-      
-           }
-        </script>
-        <style type='text/css'>
-      * { margin: 0; padding: 0; box-sizing: border-box; }
-      body { font: 13px Helvetica, Arial; }
-      form { background: #FFF; padding: 3px; position: fixed; bottom: 0; width: 100%; }
-      form input { border: 0; padding: 10px; width: 30%; margin-right: .5%; }
-      form button { width: 30%; background: rgb(130, 224, 255); border: none; padding: 10px; }
-       
-body, html, svg {
-    width: 100%;
-    height:100%;
-    padding: 0;
-    margin:0
-}
- </style>
-</head>
-<body onload="onLoad()" style="background-color: pink;">
-    <div id='graph'></div>
-    <form action="">
-      user:<input id="user" autocomplete="off" />
-      term:<input id="term" autocomplete="off" />
-      <button>Send</button>
-    </form>
     <script>
-  var socket = io();
-  $('form').on('submit', function(e) {
-    e.preventDefault(); //   
-        ret = {};
-        ret.user = $('#user').val();
-        ret.term = $('#term').val();
-        socket.emit('addTerm', JSON.stringify(ret));
-        socket.emit('fetch', ret.user);        
-        console.log(ret,JSON.stringify(ret))
-        $('#user').val('');
-        $('#term').val('');
-        return false;
+      var map; 
+      function initGeolocation() {
+        if (navigator && navigator.geolocation) {
+        var watchId = navigator.geolocation.watchPosition(successCallback, 
+                                                          errorCallback,
+                                                          {enableHighAccuracy:true,timeout:60000,maximumAge:0});
+
+        } else {
+          console.log('Geolocation is not supported');
+        }
+      }
+     
+      function errorCallback() {console.log("error with navigator object");}
+
+      function successCallback(position) {
+        var myLatlng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+        var TLatlng = new google.maps.LatLng(position.coords.latitude+0.0005, position.coords.longitude+0.0005);
+        if(map == undefined) {
+          var myOptions = {
+            zoom: 16,
+            center: myLatlng,
+            mapTypeId: google.maps.MapTypeId.ROADMAP
+          }
+          map = new google.maps.Map(document.getElementById("map"), myOptions);
+        }
+        else map.panTo(myLatlng);
+    
+        var targetOption = {
+          position: TLatlng,
+          map: map,
+          title: 'Target',
+          draggable:true,
+          animation : google.maps.Animation.DROP
+        };
+        var currentOption = {
+          position: myLatlng,
+          map: map,
+          title: 'Current',
+          animation : google.maps.Animation.DROP
+        };
+
+        var Tmarker = new google.maps.Marker(targetOption);
+        var Cmarker = new google.maps.Marker(currentOption);
+        
+        google.maps.event.addListener(Tmarker,'drag',function(event) {
+          document.getElementById('lat').value = event.latLng.lat();
+          document.getElementById('lng').value = event.latLng.lng();
+        });
+
+        google.maps.event.addListener(Tmarker,'dragend',function(event) {
+          document.getElementById('lat').value = event.latLng.lat();
+          document.getElementById('lng').value = event.latLng.lng();
+        });        
+      }
+
+    
+    </script>
+  </head>
+  <body onload="javascript:initGeolocation()">
+  <input id='lat'>lat</input>  
+  <input id='lng'>lng</input>  
+  <input id='hours'>Hours</input>  
+  <input id='minuts'>Minutes</input>  
+  <input id='go' type='button'>GO</input>
+  <div id="map"></div>
+  <div id="timer">      
+ timer
+    </div>
+<script>
+  var socket = io(); 
+  $("#go").on('click', function(e) {
+    console.log('ingo',e);
+    H = $("#hours").val();
+    M = $("#minuts").val();  
+    console.log('ingo',H,M);
+    if (H < 1) {
+      H=0;
+      if(M<1){
+        alert("ggg");
+        return;
+      }
+    }
+    /*
+    data = {};
+    data.hours = H;
+    data.minuts = M;
+    data.lat = $('#lat').val();
+    data.lng = $('#lng').val();
+    socket.emit('start',data)
+    */
+    if(M==0) M=1;
+    count(H,M);
   });
 
-      socket.on('fetch', function(msg){
-        console.log("massage",msg);
-        var inp  = JSON.parse(msg);
-        var terms = inp.terms;
-        var user = inp.user;
-        addNodes(graph,terms,user);
-        console.log("fetch got terms:",terms,user);
-      })      
+  var count = function(h,m){
+    console.log('incount',h,m);
+    $('#timer').text(h+':'+m);
+    timer = setInterval(function(){
+      console.log("interval",h,m);
+      m=m-1;
 
-      socket.on('addTerm', function(msg){
-        console.log("added term",msg);
-      });          
-    </script>  
-</body>
+      if(m==0){
+        if(h==0) {
+          $('#timer').text('0:00');
+          clearInterval(timer);
+        }
+      };
+      if(m==-1){
+        m=59;
+        h=h-1;
+      }
+      $('#timer').text( h+':'+m);
+    },1000,h,m);
+  };
+     
+</script>
+  </body>
 </html>
