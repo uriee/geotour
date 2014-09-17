@@ -8,12 +8,11 @@ var Q = require("q");
 var express = require('express');
 var app = express();
 var http = require('http').Server(app);
-app.use(express.static(__dirname + '/scripts'));
-//app.use('/bower_components',  express.static(__dirname + '/bower_components'));
+//app.use(express.static(__dirname + '/scripts'));
 var io = require('socket.io')(http);
 
 app.get('/', function(req, res){
-  res.sendfile('demo.html');
+  res.sendfile('demo2.html');
 });
 
 var Smembers = function(key){
@@ -34,20 +33,78 @@ var Sadd = function(key,val){
   return d.promise;
 };
 
+var Set = function(key,val){
+  var d = Q.defer();
+  client.set(key,val,function(err,ret){
+    if(err) {console.log("Err set",key,val,err); d.reject(err);}
+    else d.resolve(ret);
+  });
+  return d.promise;
+};
+
+var Hmset = function(key,val){
+  var d = Q.defer();
+  client.hmset(key,val,function(err,ret){
+    if(err) {console.log("Err hmset",key,val,err); d.reject(err);}
+    else d.resolve(ret);
+  });
+  return d.promise;
+};
+
+var Get = function(key){
+  var d = Q.defer();
+  client.get(key,function(err,ret){
+    if(err) {console.log("Err get",key,err); d.reject(err);}
+    else d.resolve(ret);
+  });
+  return d.promise;
+};
+
+var Hgetall = function(key){
+  var d = Q.defer();
+  client.hgetall(key,function(err,ret){
+    if(err) {console.log("Err hgetall",key,err); d.reject(err);}
+    else d.resolve(ret);
+  });
+  return d.promise;
+};
 
 io.on('connection', function(socket){
  console.log('a user connected');
   socket.on('disconnect', function(){
     console.log('user disconnected');
   });  
-  socket.on('addTerm', function (data) {
+  socket.on('addTour', function (data) {
     console.log(data,JSON.parse(data));
-    inp = JSON.parse(data);
-    insertTerm(inp.user,inp.term,function(err,ret){
-      if(!err)  io.emit('addTerm', JSON.stringify(data));
-    });
-  }); 
-  socket.on('fetch',function(key){
+    var inp = JSON.parse(data);
+    Hmset('tour:'+inp.name,inp.args).then(/*redirection*/);
+  });
+  socket.on('addUser', function (data) {
+    console.log(data,JSON.parse(data));
+    var inp = JSON.parse(data);
+    Sadd('tourUsers:'+inp.tour,inp.user);
+    Hmset('user:'+inp.user,inp.args);
+  });
+  socket.on('updateLocation', function (data) {
+    console.log(data,JSON.parse(data));
+    var inp = JSON.parse(data);
+    Set('userLocation:'+inp.name,inp.location);
+  });
+  socket.on('getLocations', function (tour) {
+    console.log(data,JSON.parse(tourName));
+    var tour = JSON.parse(tourName);
+    var locations = [];
+    Smembers('tourUsers:'+tour).then(
+      ret.forEach(function(U){
+        Get('userLocation:'+U).then(function(err,ret){locations.push({'name':U,location:ret})});
+      })
+     ).then( 
+        function(err,ret){
+        socket.emit('getLocation',locations);        
+        })
+  });
+  /*
+  socket.on('',function(key){
     console.log("fetch",key);
     Smembers('userR:'+key).then(function(data){
       out = {}
@@ -56,6 +113,7 @@ io.on('connection', function(socket){
       io.emit('fetch', JSON.stringify(out));
     });
   });
+  */
 });
 
 http.listen(3000, function(){
