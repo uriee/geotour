@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <title>Draggable directions</title>
+    <style>
+      html, body, #map-canvas {
+        height: 100%;
+        margin: 0px;
+        padding: 0px
+      }
+    </style>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?sensor=true"></script>
+    <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+    <script>
+
+var rendererOptions = {
+  draggable: false
+};
+var directionsDisplay = new google.maps.DirectionsRenderer(rendererOptions);;
+var directionsService = new google.maps.DirectionsService();
+var map;
+
+
+
+function initGeolocation() {
+	if (navigator && navigator.geolocation) {
+	var watchId = navigator.geolocation.watchPosition(initialize, 
+                                                  errorCallback,
+                                                  {enableHighAccuracy:false,timeout:60000,maximumAge:60000});
+
+	} else {
+  		console.log('Geolocation is not supported');
+	}
+}
+
+ function errorCallback() {console.log("error with navigator object");}
+      
+function initialize(position) {
+  var Current = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+  var Target = new google.maps.LatLng(<%= lan %>,<%= lng %>);
+  var mapOptions = {
+    zoom: 7,
+    center: Current
+  };
+  map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+  directionsDisplay.setMap(map);
+  directionsDisplay.setPanel(document.getElementById('directionsPanel'));
+
+  calcRoute(myLatlng,TLatlng);
+}
+
+function calcRoute(p1,p2) {
+
+  var request = {
+    origin: p1,
+    destination: p2,
+    travelMode: google.maps.TravelMode.WALKING
+  };
+  directionsService.route(request, function(response, status) {
+    if (status == google.maps.DirectionsStatus.OK) {
+      directionsDisplay.setDirections(response);
+    }
+  });
+}
+
+function computeTotalDistance(result) {
+  var total = 0;
+  var myroute = result.routes[0];
+  for (var i = 0; i < myroute.legs.length; i++) {
+    total += myroute.legs[i].distance.value;
+  }
+  total = total / 1000.0;
+  document.getElementById('total').innerHTML = total + ' km';
+}
+
+/*google.maps.event.addDomListener(window, 'load', initialize);*/
+
+    </script>
+  </head>
+  <body  onload="javascript:initGeolocation()">
+    <div id="timer">      
+ timer
+    </div>
+    <div id="map-canvas" style="height:40%;top:70px"></div>
+    <div id="directionsPanel" style="top:1070px">
+    <p>Total Distance: <span id="total"></span></p>
+    </div>
+<script>
+  var socket = io(); 
+  $("#go").on('click', function(e) {
+    console.log('ingo',e);
+    H = $("#hours").val();
+    M = $("#minuts").val(); 
+    lat = $("#lat").val();
+    lng = $("#lng").val();
+    var ret= {'H':H, 'M':M, 'lat':lat, 'lng':lng};
+    console.log('ingo',H,M);
+    if (H < 1) {
+      H=0;
+      if(M<1){
+        alert("ggg");
+        return;
+      }
+    }
+    /*
+    data = {};
+    data.hours = H;
+    data.minuts = M;
+    data.lat = $('#lat').val();
+    data.lng = $('#lng').val();
+    socket.emit('start',data)
+    */
+    if(M==0) M=1;
+    count(H,M);
+     socket.emit('addTour', JSON.stringify(ret));
+  });
+
+  var count = function(h,m){
+    console.log('incount',h,m);
+    $('#timer').text(h+':'+m);
+    timer = setInterval(function(){
+      console.log("interval",h,m);
+      m=m-1;
+
+      if(m==0){
+        if(h==0) {
+          $('#timer').text('0:00');
+          clearInterval(timer);
+        }
+      };
+      if(m==-1){
+        m=59;
+        h=h-1;
+      }
+      $('#timer').text( h+':'+m);
+    },1000,h,m);
+  };
+     
+</script>
+  </body>
+</html>

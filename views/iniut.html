@@ -93,6 +93,7 @@ function computeTotalDistance(result) {
   <input id='lng'>lng</input>  
   <input id='hours'>Hours</input>  
   <input id='minuts'>Minutes</input>  
+  <input id='tourName'>name</input>
   <input id='go' type='button'>GO</input>
   
     <div id="map-canvas" style="height:40%;top:70px"></div>
@@ -102,11 +103,12 @@ function computeTotalDistance(result) {
 <script>
   var socket = io(); 
   $("#go").on('click', function(e) {
-    H = $("#hours").val();
-    M = $("#minuts").val(); 
-    lat = $("#lat").val();
-    lng = $("#lng").val();
-    var ret= {'H':H, 'M':M, 'lat':lat, 'lng':lng};
+    var H = $("#hours").val(),
+        M = $("#minuts").val(),
+        lat = $("#lat").val(),
+        lng = $("#lng").val(),
+        name = $("#tourName").val();
+    var ret= {args : {'H':H, 'M':M, 'lat':lat, 'lng':lng},'name':name};
     socket.emit('addTour', JSON.stringify(ret));
     alert("new tour was defined");
   });
