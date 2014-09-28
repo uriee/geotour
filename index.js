@@ -1,47 +1,14 @@
+var Q = require("q");
+var express = require('express');
+var app = express();
+var http = require('http').Server(app);
+var io = require('socket.io')(http);
 var redis = require("redis"),
     client = redis.createClient();
 
     client.on("error", function (err) {
     console.log("error event - " + client.host + ":" + client.port + " - " + err);
 });
-var Q = require("q");
-var express = require('express');
-var app = express();
-var http = require('http').Server(app);
-var io = require('socket.io')(http);
-
-app.use(express.static(__dirname + '/scripts'));
-app.engine('.html', require('ejs').__express);
-app.set('views', __dirname + '/views');
-app.set('view engine', 'html');
-
-app.get('/init', function(req, res){
-  res.render('init', {
-    users: 4,
-    title: "EJS example",
-    header: "Some users"
-  });
-});
-
-app.get('/', function(req, res){
-  res.render('welcome');
-});
-
-app.get('/tour/:tourname/:username', function(req, res){
-  data = {}
-  Get('tour:'+req.params.tourname).then(function(d){
-    res.render('tour', {
-      tourname :  req.params.tourname,
-      username :  req.params.username,
-      H : d.H,
-      M : d.M,
-      lat : d.lat,
-      lng : d.lng
-    });    
-  });
-
-});
-
 var Smembers = function(key){
   var d = Q.defer();
   client.smembers(key,function(err,ret){
@@ -87,6 +54,54 @@ var Hgetall = function(key){
   return d.promise;
 };
 
+function get_locations(users) {
+    var locations = [];
+    users.forEach(function(user) {
+        var deferred = Q.defer();
+        Get('userLocation:'+user).then(function(ret){
+            deferred.resolve({'name':user,location:ret});
+        });
+        locations.push(deferred.promise);
+    });
+    return Q.all(locations);
+}
+
+
+app.use(express.static(__dirname + '/scripts'));
+app.engine('.html', require('ejs').__express);
+app.set('views', __dirname + '/views');
+app.set('view engine', 'html');
+
+app.get('/init', function(req, res){
+  res.render('init', {
+    users: 4,
+    title: "EJS example",
+    header: "Some users"
+  });
+});
+
+app.get('/', function(req, res){
+  res.render('welcome');
+});
+
+app.get('/tour/:tourname/:username', function(req, res){
+  Get('tour:'+req.params.tourname).then(function(d){
+    var data = JSON.parse(d);
+    console.log(d);
+    Sadd('tourUsers:'+req.params.tourname,req.params.username);
+    res.render('tour', {
+      tourname :  req.params.tourname,
+      username :  req.params.username,
+      H : data.H,
+      M : data.M,
+      lat : data.lat,
+      lng : data.lng
+    });    
+  });
+
+});
+
+
 io.on('connection', function(socket){
  console.log('a user connected');
   socket.on('disconnect', function(){
@@ -98,41 +113,30 @@ io.on('connection', function(socket){
     console.log('Hmset(tour:','tour:'+inp.name,inp.args);
     Set('tour:'+inp.name,JSON.stringify(inp.args)).then(run(inp.name));
   });
-  socket.on('addUser', function (data) {
-    console.log(data,JSON.parse(data));
-    var inp = JSON.parse(data);
-    Sadd('tourUsers:'+inp.tour,inp.user);
-    Set('user:'+inp.user,inp.tour);
+  socket.on('time', function (inp) {
+    inp = JSON.parse(inp);
+    Get('tour:'+inp.tour).then(function(data){
+     data = JSON.parse(data);
+     var minuts = data.M,
+         houres = data.H;
+     socket.emit('time',JSON.stringify({H: houres, M: minuts}));
+     });  
   });
-  socket.on('updateLocation', function (data) {
-    console.log(data,JSON.parse(data));
-    var inp = JSON.parse(data);
-    Set('userLocation:'+inp.name,inp.location);
+  socket.on('location', function (data) {
+     data = JSON.parse(data);
+    obj = {}
+    obj.lat = data.location.latitude;
+    obj.lng = data.location.longitude;
+    Set('userLocation:'+data.name,JSON.stringify(obj));
   });
   socket.on('getLocations', function (tour) {
-    console.log(data,JSON.parse(tourName));
-    var tour = JSON.parse(tourName);
-    var locations = [];
-    Smembers('tourUsers:'+tour).then(
-      ret.forEach(function(U){
-        Get('userLocation:'+U).then(function(err,ret){locations.push({'name':U,location:ret})});
-      })
-     ).then( 
-        function(err,ret){
-        socket.emit('getLocation',locations);        
-        })
-  });
-  /*
-  socket.on('',function(key){
-    console.log("fetch",key);
-    Smembers('userR:'+key).then(function(data){
-      out = {}
-      out.terms = data;
-      out.user = key;
-      io.emit('fetch', JSON.stringify(out));
+    Smembers('tourUsers:'+tour).then(function(ret){
+      return get_locations(ret);
+    }).then( function(locations){
+        console.log("loc",locations);
+        socket.emit('getLocations',JSON.stringify(locations));        
     });
   });
-  */
 });
 
 http.listen(3000, function(){
@@ -149,7 +153,11 @@ var run  = function(tour){
       var minuts = data.M,
           houres = data.H;
       minuts--;
-      if(minuts == -120) clearInterval(tourInterval);
+      if(minuts == -120) {
+        clearInterval(tourInterval);
+        client.del('tour:'+tour);
+        client.del('tourUsers'+tour);
+      }
       if(minuts === 0 & houres === 0) {
         /* time ended */
       }
@@ -161,6 +169,6 @@ var run  = function(tour){
       data.H = houres;
       Set('tour:'+tour,JSON.stringify(data)).then();
     });  
-  }, 1000);
+  },60000);
 }
 

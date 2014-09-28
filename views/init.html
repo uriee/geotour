@@ -27,10 +27,12 @@ var map;
 
 function initGeolocation() {
 	if (navigator && navigator.geolocation) {
+    var getp = navigator.geolocation.getCurrentPosition(initialize,errorCallback);  
+    /*
 	var watchId = navigator.geolocation.watchPosition(initialize, 
                                                   errorCallback,
                                                   {enableHighAccuracy:false,timeout:60000,maximumAge:60000});
-
+*/
 	} else {
   		console.log('Geolocation is not supported');
 	}
@@ -51,9 +53,9 @@ function initialize(position) {
 
   google.maps.event.addListener(directionsDisplay, 'directions_changed', function() {
     var newpos = directionsDisplay.directions;
-    console.log(newpos);
-    document.getElementById('lat').value = newpos.lc.destination.B;
-    document.getElementById('lng').value = newpos.lc.destination.k;
+    console.log(directionsDisplay);
+    document.getElementById('lat').value = newpos.nc.destination.B;
+    document.getElementById('lng').value = newpos.nc.destination.k;
     computeTotalDistance(newpos);
   });
 
@@ -89,14 +91,13 @@ function computeTotalDistance(result) {
     </script>
   </head>
   <body  onload="javascript:initGeolocation()">
-      <input id='lat'>lat</input>  
+  <input id='lat'>lat</input>  
   <input id='lng'>lng</input>  
   <input id='hours'>Hours</input>  
   <input id='minuts'>Minutes</input>  
+  <input id='tourName'>name</input>
   <input id='go' type='button'>GO</input>
-    <div id="timer">      
- timer
-    </div>
+  
     <div id="map-canvas" style="height:40%;top:70px"></div>
     <div id="directionsPanel" style="top:1070px">
     <p>Total Distance: <span id="total"></span></p>
@@ -104,53 +105,15 @@ function computeTotalDistance(result) {
 <script>
   var socket = io(); 
   $("#go").on('click', function(e) {
-    console.log('ingo',e);
-    H = $("#hours").val();
-    M = $("#minuts").val(); 
-    lat = $("#lat").val();
-    lng = $("#lng").val();
-    var ret= {'H':H, 'M':M, 'lat':lat, 'lng':lng};
-    console.log('ingo',H,M);
-    if (H < 1) {
-      H=0;
-      if(M<1){
-        alert("ggg");
-        return;
-      }
-    }
-    /*
-    data = {};
-    data.hours = H;
-    data.minuts = M;
-    data.lat = $('#lat').val();
-    data.lng = $('#lng').val();
-    socket.emit('start',data)
-    */
-    if(M==0) M=1;
-    count(H,M);
-     socket.emit('addTour', JSON.stringify(ret));
+    var H = $("#hours").val(),
+        M = $("#minuts").val(),
+        lat = $("#lat").val(),
+        lng = $("#lng").val(),
+        name = $("#tourName").val();
+    var ret= {args : {'H':H, 'M':M, 'lat':lat, 'lng':lng},'name':name};
+    socket.emit('addTour', JSON.stringify(ret));
+    alert("new tour was defined");
   });
-
-  var count = function(h,m){
-    console.log('incount',h,m);
-    $('#timer').text(h+':'+m);
-    timer = setInterval(function(){
-      console.log("interval",h,m);
-      m=m-1;
-
-      if(m==0){
-        if(h==0) {
-          $('#timer').text('0:00');
-          clearInterval(timer);
-        }
-      };
-      if(m==-1){
-        m=59;
-        h=h-1;
-      }
-      $('#timer').text( h+':'+m);
-    },1000,h,m);
-  };
      
 </script>
   </body>

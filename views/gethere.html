@@ -1,12 +1,18 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <base href="/" />
-		<meta http-equiv="content-type" content="text/html; charset=UTF-8">
-		<meta charset="utf-8">     
-    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
-	  <link href="bootstrap.min.css"  type="text/css"  rel="stylesheet">    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
     <title>GeThere</title>
+    <meta name="generator" content="Bootply" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link href="bootstrap.min.css" Content-Type='text/css' rel="stylesheet">
+    <link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.min.css" rel="stylesheet">
+    <!--[if lt IE 9]>
+      <script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link href="styles.css" rel="stylesheet">
     <style>
       html, body, #map-canvas {
         height: 100%;
@@ -30,20 +36,23 @@ var map;
 
 
 function initGeolocation() {
-	if (navigator && navigator.geolocation) {
+  if (navigator && navigator.geolocation) {
   var getp = navigator.geolocation.getCurrentPosition(initialize);  
+  /*var watchId = navigator.geolocation.watchPosition(initialize, 
+                                                  errorCallback,
+                                                  {enableHighAccuracy:false,timeout:60000,maximumAge:60000});
+                                                  */
 
-	} else {
-  		console.log('Geolocation is not supported');
-	}
+  } else {
+      console.log('Geolocation is not supported');
+  }
 }
       
   
       
   function start(){
-    var geo = initGeolocation();
-    console.log('geo:',geo);
-    //setInterval(initGeolocation,60000)
+    initGeolocation();
+    setInterval(initGeolocation,60000)
     setInterval(function(){
       socket.emit('time',JSON.stringify({tour : '<%= tourname %>'}));
     },60000);
@@ -64,7 +73,6 @@ function initialize(position) {
   directionsDisplay.setPanel(document.getElementById('directionsPanel'));
 
   calcRoute(Current,Target);
-  socket.emit('location',JSON.stringify({name : '<%= username %>', location : position.coords}));
 }
 
 function calcRoute(p1,p2) {
@@ -89,67 +97,52 @@ function computeTotalDistance(result) {
   }
   total = total / 1000.0;
   document.getElementById('total').innerHTML = total + ' km';
-}
-
-/*google.maps.event.addDomListener(window, 'load', initialize);*/
-
-    </script>
+}  
+</script>  
   </head>
-  <body  onload="javascript:start()">  
-
+   <body  onload="javascript:start()">  
+    <div class="container">
+      <div class="row clearfix">
         <div class="col-md-12 column">
           <div class="row clearfix">
-            <div class="col-xs-3 column">
-              <button  id='refresh' class="btn btn-primary">Refresh</button>
+            <div class="col-sm-6 column">
+              <button type="button" id='refresh' class="btn btn-primary">Refresh</button>
             </div>
-            <div class="col-xs-5 column">
-              <button  id='getLocations' class="btn btn-primary">where is everybody?</button>
-            </div>            
-            <div class="col-xs-4 column">
+            <div class="col-sm-6 column">
               <h3 id = 'timer' class="text-muted text-center">
                 timer
               </h3>
             </div>
           </div>
-        </div> 
-
-
-    <div id="map-canvas" style="height:60%;top:10px"></div>
-    <div id="directionsPanel" style="top:1070px">
+          <div class="row clearfix">
+            <div class="col-md-12 column">
+            </div>
+          </div>
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h3 class="panel-title">
+                Panel title
+              </h3>
+            </div>
+            <div class="panel-body">
+              <div  id="map-canvas" style="height:40%;top:70px"> </div
+            </div>
+            <div id="directionsPanel" style="top:1070px" class="panel-footer">
+               <p>Total Distance: <span id="total"></span></p>
+            </div>
+          </div>
+        </div>
       </div>
-  <div>  <p>Total Distance: <span id="total"></span></p></div>      
-<script>
+    </div>
+ <script>
   
   socket.on('time',function(data){
     data = JSON.parse(data);
     $('#timer').text( data.H+':'+data.M);
   })
-  var image = 'images/marker-24.png';
-  socket.on('getLocations',function(locations){
-    locations = JSON.parse(locations);
-    console.log("getlocations:",locations);
-    locations.forEach(function(location){
-      console.log ("PPPPPp:",locations.length,location);
-      if (location.location){
-        var loc = JSON.parse(location.location);
-        console.log("ppo",loc);
-        var Latlng = new google.maps.LatLng(loc.lat,loc.lng);
-        var marker = new google.maps.Marker({
-          position: Latlng,
-          title: location.name,
-          icon: image,
-          map : map
-        });
-        console.log("Latlng,marker");
-      }
-    })
-  })
   $("#refresh").on('click', function() {
     initGeolocation()
   });
-  $("#getLocations").on('click', function() {
-    socket.emit('getLocations','<%= tourname %>');
-  });  
   
 </script>
   </body>
