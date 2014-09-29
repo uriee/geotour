@@ -32,18 +32,23 @@ var map;
 function initGeolocation() {
 	if (navigator && navigator.geolocation) {
   var getp = navigator.geolocation.getCurrentPosition(initialize);  
-
 	} else {
   		console.log('Geolocation is not supported');
 	}
 }
-      
+  
+function getGeo() {
+	if (navigator && navigator.geolocation) {
+  var getp = navigator.geolocation.getCurrentPosition(refresh);  
+	} else {
+  		console.log('Geolocation is not supported');
+	}
+}      
   
       
   function start(){
-    var geo = initGeolocation();
-    console.log('geo:',geo);
-    //setInterval(initGeolocation,60000)
+    initGeolocation();
+    setInterval(getGeo,30000)
     setInterval(function(){
       socket.emit('time',JSON.stringify({tour : '<%= tourname %>'}));
     },60000);
@@ -66,6 +71,13 @@ function initialize(position) {
   calcRoute(Current,Target);
   socket.emit('location',JSON.stringify({name : '<%= username %>', location : position.coords}));
 }
+
+function refresh(position) {
+  var Current = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+  var Target = new google.maps.LatLng(<%= lng %>,<%= lat %>);
+  calcRoute(Current,Target);
+  socket.emit('location',JSON.stringify({name : '<%= username %>', location : position.coords}));
+}      
 
 function calcRoute(p1,p2) {
 

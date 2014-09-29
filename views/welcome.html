@@ -21,14 +21,15 @@
         <div class="col-lg-12 text-center v-center">
           
           <h1>Hello </h1>
-          <p class="lead">How are you and what do you want?</p>
+          <p class="lead">Who are you and what is your Point?</p>
+          <p id = 'massgae'>  </p>
           
           <br><br><br>
           
           <form class="col-lg-12">
             <div class="input-group" style="width:340px;text-align:center;margin:0 auto;">
-            <input id='username' class="form-control input-lg" title="Enter your name" placeholder="Enter your name" type="text">
-            <input id='tourname' class="form-control input-lg" title="Enter tour name" placeholder="Enter your tour name" type="text">
+            <input id='username' class="form-control input-lg" title="Enter your name" placeholder="Who are you?" type="text">
+            <input id='tourname' class="form-control input-lg" title="Enter point name" placeholder='what is your Point?' type="text">
             </div>
              <span class="input-group-btn"><button id='submit' class="btn btn-lg btn-primary" type="button">OK</button></span>
           </form>
@@ -92,6 +93,7 @@
     <script src="/socket.io/socket.io.js"></script>
     <script>
   var socket = io(); 
+ 
   $('#submit').on('click',function() {
         console.log("hfhf");
         ret = {};

@@ -81,12 +81,16 @@ app.get('/init', function(req, res){
 });
 
 app.get('/', function(req, res){
-  res.render('welcome');
+  res.render('welcome',{'massage' : 'all fine!'});
 });
 
 app.get('/tour/:tourname/:username', function(req, res){
   Get('tour:'+req.params.tourname).then(function(d){
     var data = JSON.parse(d);
+    if(!d) {
+      res.render('welcome',{'massage' : 'No such Point'});
+      return;
+    }
     console.log(d);
     Sadd('tourUsers:'+req.params.tourname,req.params.username);
     res.render('tour', {
