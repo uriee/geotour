@@ -39,7 +39,7 @@ function initGeolocation() {
   
 function getGeo() {
 	if (navigator && navigator.geolocation) {
-  var getp = navigator.geolocation.getCurrentPosition(refresh,null{maximumAge:60000, timeout:5000, enableHighAccuracy:true});  
+  var getp = navigator.geolocation.getCurrentPosition(refresh,null,{maximumAge:60000, timeout:5000, enableHighAccuracy:true});  
 	} else {
   		console.log('Geolocation is not supported');
 	}
