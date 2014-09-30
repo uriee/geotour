@@ -27,6 +27,24 @@ var Sadd = function(key,val){
   return d.promise;
 };
 
+var Srem = function(key,val){
+  var d = Q.defer();
+  client.srem(key,val,function(err,ret){
+    if(err) {console.log("Err Srem",key,val,err); d.reject(err);}
+    else d.resolve(ret);
+  });
+  return d.promise;
+};
+
+var Sismember = function(key,val){
+  var d = Q.defer();
+  client.sismember(key,val,function(err,ret){
+    if(err) {console.log("Err Sismember",key,val,err); d.reject(err);}
+    else d.resolve(ret);
+  });
+  return d.promise;
+};
+
 var Set = function(key,val){
   var d = Q.defer();
   client.set(key,val,function(err,ret){
@@ -54,16 +72,23 @@ var Hgetall = function(key){
   return d.promise;
 };
 
-function get_locations(users) {
+function get_locations(users,tour) {
+  return Get('tour:'+tour).then(function(T){
+    T = JSON.parse(T);
     var locations = [];
     users.forEach(function(user) {
         var deferred = Q.defer();
         Get('userLocation:'+user).then(function(ret){
-            deferred.resolve({'name':user,location:ret});
+          var Jret = JSON.parse(ret);
+          var diff = Math.pow((parseInt(T.H)*60+parseInt(T.M)) - Jret.time,2);
+          console.log('diff:',diff,(T.H*60+T.M),Jret.time,user);          
+          var active = diff < 10 ? 1 : 0;
+          deferred.resolve({'name':user,location : ret, active :active});
         });
         locations.push(deferred.promise);
     });
     return Q.all(locations);
+  });  
 }
 
 
@@ -120,22 +145,24 @@ io.on('connection', function(socket){
   socket.on('time', function (inp) {
     inp = JSON.parse(inp);
     Get('tour:'+inp.tour).then(function(data){
-     data = JSON.parse(data);
-     var minuts = data.M,
-         houres = data.H;
-     socket.emit('time',JSON.stringify({H: houres, M: minuts}));
+      data = JSON.parse(data);
+      var minuts = data.M,
+          houres = data.H;
+      socket.emit('time',JSON.stringify({H: houres, M: minuts}));
      });  
   });
   socket.on('location', function (data) {
      data = JSON.parse(data);
-    obj = {}
+    var obj = {}
     obj.lat = data.location.latitude;
     obj.lng = data.location.longitude;
+    obj.time = data.H * 60 + data.M;
     Set('userLocation:'+data.name,JSON.stringify(obj));
   });
+  
   socket.on('getLocations', function (tour) {
     Smembers('tourUsers:'+tour).then(function(ret){
-      return get_locations(ret);
+      return get_locations(ret,tour);
     }).then( function(locations){
         console.log("loc",locations);
         socket.emit('getLocations',JSON.stringify(locations));        
@@ -159,8 +186,8 @@ var run  = function(tour){
       minuts--;
       if(minuts == -120) {
         clearInterval(tourInterval);
-        client.del('tour:'+tour);
-        client.del('tourUsers'+tour);
+        //client.del('tour:'+tour);
+        //client.del('tourUsers'+tour);
       }
       if(minuts === 0 & houres === 0) {
         /* time ended */
