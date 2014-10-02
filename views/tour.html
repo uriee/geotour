@@ -31,15 +31,16 @@ var map;
 
 function initGeolocation() {
 	if (navigator && navigator.geolocation) {
-  var getp = navigator.geolocation.getCurrentPosition(initialize,null,{maximumAge:60000, timeout:5000, enableHighAccuracy:true});  
+  var getp = navigator.geolocation.getCurrentPosition(initialize,null,{maximumAge:0, timeout:5000, enableHighAccuracy:true});  
 	} else {
   		console.log('Geolocation is not supported');
 	}
 }
   
 function getGeo() {
+  console.log("in get geo");
 	if (navigator && navigator.geolocation) {
-  var getp = navigator.geolocation.getCurrentPosition(refresh,null,{maximumAge:60000, timeout:5000, enableHighAccuracy:true});  
+  var getp = navigator.geolocation.watchPosition(refresh,null,{maximumAge:5000, timeout:5000, enableHighAccuracy:true});  
 	} else {
   		console.log('Geolocation is not supported');
 	}
@@ -50,7 +51,7 @@ var hours =  <%= H %>,
     
 function start(){
   initGeolocation();
-  setInterval(getGeo,30000)
+  setInterval(getGeo,30000);
   setInterval(function(){
     socket.emit('time',JSON.stringify({tour : '<%= tourname %>'}));
   },60000);
@@ -72,9 +73,10 @@ function initialize(position) {
 
   calcRoute(Current,Target);
   socket.emit('location',JSON.stringify({name : '<%= username %>', location : position.coords , H : hours, M : minuts}));
-}
+ }
 
 function refresh(position) {
+  console.log('in refresh');
   var Current = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
   var Target = new google.maps.LatLng(<%= lng %>,<%= lat %>);
   calcRoute(Current,Target);
