@@ -2,13 +2,14 @@
 <html>
   <head>
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+	  <link href="bootstrap.min.css"  type="text/css"  rel="stylesheet">     
     <meta charset="utf-8">
     <title>Get To The Point</title>
     <style>
       html, body, #map-canvas {
         height: 100%;
-        margin: 0px;
-        padding: 0px
+        margin: 4px;
+        padding: 4px;
       }
     </style>
     <script src="/socket.io/socket.io.js"></script>
@@ -93,17 +94,64 @@ function computeTotalDistance(result) {
     </script>
   </head>
   <body  onload="javascript:initGeolocation()">
-  <input id='lat'>lat</input>  
-  <input id='lng'>lng</input>  
-  <input id='hours'>Hours</input>  
-  <input id='minuts'>Minutes</input>  
-  <input id='tourName'>name</input>
-  <input id='go' type='button'>GO</input>
+    <div id="map-canvas" style="height:60%;top:10px"></div>    
+<form class="form-horizontal">
+<fieldset>
+
+<!-- Form Name -->
+<legend></legend>
+
+<!-- Text input-->
+<div class="control-group">
+  <label class="control-label" for="textinput">Latitude</label>
+  <div class="controls">
+    <input id="lat"  type="text" placeholder="placeholder" class="input-xlarge">
+  </div>
+</div>
+
+<!-- Text input-->
+<div class="control-group">
+  <label class="control-label" for="textinput">longitude</label>
+  <div class="controls">
+    <input id="lng"  type="text" placeholder="" class="input-xlarge">
+  </div>
+</div>
+
+<!-- Text input-->
+<div class="control-group">
+  <label class="control-label" for="textinput">hours</label>
+  <div class="controls">
+    <input id="hours" type="text" placeholder="placeholder" class="input-xlarge">
+  </div>
+</div>
+
+<!-- Text input-->
+<div class="control-group">
+  <label class="control-label" for="textinput">minuts</label>
+  <div class="controls">
+    <input id="minuts"  type="text" placeholder="placeholder" class="input-xlarge">
+  </div>
+</div>
   
-    <div id="map-canvas" style="height:40%;top:70px"></div>
-    <div id="directionsPanel" style="top:1070px">
-    <p>Total Distance: <span id="total"></span></p>
-    </div>
+<!-- Text input-->
+<div class="control-group">
+  <label class="control-label" for="textinput">name</label>
+  <div class="controls">
+    <input id="tourname"  type="text" placeholder="placeholder" class="input-xlarge">
+  </div>
+</div>  
+
+<!-- Button -->
+<div class="control-group">
+  <div class="controls">
+    <button id="singlebutton" name="singlebutton" class="btn btn-primary">Go</button>
+  </div>
+</div>
+
+</fieldset>
+</form>
+    
+ </div>
 <script>
   var socket = io(); 
   $("#go").on('click', function(e) {
