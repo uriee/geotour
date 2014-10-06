@@ -13,6 +13,7 @@
         margin: 0px;
         padding: 0px
       }
+      #map_canvas {background: transparent url(images/load.gif) no-repeat center center;}
     </style>
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://maps.googleapis.com/maps/api/js?sensor=true"></script>
@@ -31,7 +32,7 @@ var map;
 
 function initGeolocation() {
 	if (navigator && navigator.geolocation) {
-  var getp = navigator.geolocation.getCurrentPosition(initialize,null,{maximumAge:0, timeout:5000, enableHighAccuracy:true});  
+  var getp = navigator.geolocation.getCurrentPosition(initialize,gpsalert,{maximumAge:0, timeout:5000, enableHighAccuracy:true});  
 	} else {
   		console.log('Geolocation is not supported');
 	}
@@ -51,14 +52,15 @@ var hours =  <%= H %>,
     
 function start(){
   initGeolocation();
-  setInterval(getGeo,30000);
+  setTimeout(getGeo,1500);
+  setInterval(getGeo,180000);
   setInterval(function(){
     socket.emit('time',JSON.stringify({tour : '<%= tourname %>'}));
   },60000);
   $('#timer').text( hours+':'+minuts);
 };
       
- function errorCallback() {console.log("error with navigator object");}
+ function gpsalert() {alert("You need that GPS man!");}
       
 function initialize(position) {
   var Current = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
@@ -160,6 +162,12 @@ function computeTotalDistance(result) {
           title: location.name,
           icon: image,
           map : map
+        });
+        var markerInfo = new google.maps.InfoWindow({
+          content: '<div>'+location.name+'</div>'
+        });
+        google.maps.event.addListener(marker, 'click', function() {
+          markerInfo.open(map,marker);
         });
         console.log("Latlng,marker");
       }

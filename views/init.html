@@ -3,7 +3,7 @@
   <head>
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
     <meta charset="utf-8">
-    <title>Draggable directions</title>
+    <title>Get To The Point</title>
     <style>
       html, body, #map-canvas {
         height: 100%;
@@ -54,8 +54,10 @@ function initialize(position) {
   google.maps.event.addListener(directionsDisplay, 'directions_changed', function() {
     var newpos = directionsDisplay.directions;
     console.log(directionsDisplay);
-    document.getElementById('lat').value = newpos.nc.destination.B;
-    document.getElementById('lng').value = newpos.nc.destination.k;
+    //document.getElementById('lat').value = newpos.oc.destination.B;
+    //document.getElementById('lng').value = newpos.oc.destination.k;
+    document.getElementById('lat').value = newpos.routes[0].legs[0].end_location.B;
+    document.getElementById('lng').value = newpos.routes[0].legs[0].end_location.k;    
     computeTotalDistance(newpos);
   });
 
