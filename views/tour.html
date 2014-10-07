@@ -26,7 +26,7 @@ var rendererOptions = {
 };
 var directionsDisplay = new google.maps.DirectionsRenderer(rendererOptions);;
 var directionsService = new google.maps.DirectionsService();
-var map;
+var map,getp;
 
 
 
@@ -41,7 +41,7 @@ function initGeolocation() {
 function getGeo() {
   console.log("in get geo");
 	if (navigator && navigator.geolocation) {
-  var getp = navigator.geolocation.watchPosition(refresh,null,{maximumAge:5000, timeout:5000, enableHighAccuracy:true});  
+  getp = navigator.geolocation.watchPosition(refresh,null,{maximumAge:5000, timeout:5000, enableHighAccuracy:true});  
 	} else {
   		console.log('Geolocation is not supported');
 	}
@@ -174,9 +174,10 @@ function computeTotalDistance(result) {
     })
   })
   $("#refresh").on('click', function() {
-    initGeolocation()
+    getGeo()
   });
   $("#getLocations").on('click', function() {
+    navigator.geolocation.clearWatch(getp);
     socket.emit('getLocations','<%= tourname %>');
   });  
   
