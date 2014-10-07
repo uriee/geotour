@@ -26,7 +26,7 @@ var rendererOptions = {
 };
 var directionsDisplay = new google.maps.DirectionsRenderer(rendererOptions);;
 var directionsService = new google.maps.DirectionsService();
-var map,getp;
+var map;
 
 
 
@@ -41,7 +41,7 @@ function initGeolocation() {
 function getGeo() {
   console.log("in get geo");
 	if (navigator && navigator.geolocation) {
-  getp = navigator.geolocation.watchPosition(refresh,null,{maximumAge:5000, timeout:5000, enableHighAccuracy:true});  
+  var getp = navigator.geolocation.watchPosition(refresh,null,{maximumAge:5000, timeout:5000, enableHighAccuracy:true});  
 	} else {
   		console.log('Geolocation is not supported');
 	}
@@ -53,7 +53,7 @@ var hours =  <%= H %>,
 function start(){
   initGeolocation();
   setTimeout(getGeo,1500);
-  setInterval(getGeo,180000);
+  //setInterval(getGeo,180000);
   setInterval(function(){
     socket.emit('time',JSON.stringify({tour : '<%= tourname %>'}));
   },60000);
@@ -148,7 +148,6 @@ function computeTotalDistance(result) {
   var active = 'images/marker-24.png';
   var nactive = 'images/marker-16.png';
   socket.on('getLocations',function(locations){
-    navigator.geolocation.clearWatch(getp);
     locations = JSON.parse(locations);
     console.log("getlocations:",locations);
     locations.forEach(function(location){
@@ -175,7 +174,7 @@ function computeTotalDistance(result) {
     })
   })
   $("#refresh").on('click', function() {
-    getGeo();
+    initGeolocation()
   });
   $("#getLocations").on('click', function() {
     socket.emit('getLocations','<%= tourname %>');

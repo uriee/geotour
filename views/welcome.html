@@ -22,6 +22,7 @@
           
           <h1>GetThere! </h1>
           <p class="lead">Who are you and what is your Point?</p>
+          <p><a href='/init' >Do you Have A Point?</a></p>
           <p id = 'massage'>  </p>
           
           <br><br><br>
@@ -94,8 +95,8 @@
     <script>
   var socket = io(); 
  
-  $('#submit').on('click',function() {
-        console.log("hfhf");
+  $('#submit').on('click',function(e) {
+        //e.preventDefault();
         ret = {};
         ret.user = $('#username').val();
         ret.tour = $('#tourname').val();

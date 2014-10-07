@@ -43,7 +43,7 @@ function initGeolocation() {
       
 function initialize(position) {
   var myLatlng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
-  var TLatlng = new google.maps.LatLng(position.coords.latitude+0.0005, position.coords.longitude+0.0005);
+  var TLatlng = new google.maps.LatLng(position.coords.latitude+0.002, position.coords.longitude+0.002);
   var mapOptions = {
     zoom: 7,
     center: myLatlng
@@ -59,7 +59,6 @@ function initialize(position) {
     //document.getElementById('lng').value = newpos.oc.destination.k;
     document.getElementById('lat').value = newpos.routes[0].legs[0].end_location.B;
     document.getElementById('lng').value = newpos.routes[0].legs[0].end_location.k;    
-    computeTotalDistance(newpos);
   });
 
   calcRoute(myLatlng,TLatlng);
@@ -79,90 +78,84 @@ function calcRoute(p1,p2) {
   });
 }
 
-function computeTotalDistance(result) {
-  var total = 0;
-  var myroute = result.routes[0];
-  for (var i = 0; i < myroute.legs.length; i++) {
-    total += myroute.legs[i].distance.value;
-  }
-  total = total / 1000.0;
-  document.getElementById('total').innerHTML = total + ' km';
-}
-
 /*google.maps.event.addDomListener(window, 'load', initialize);*/
 
     </script>
   </head>
   <body  onload="javascript:initGeolocation()">
     <div id="map-canvas" style="height:60%;top:10px"></div>    
-<form class="form-horizontal">
-<fieldset>
 
-<!-- Form Name -->
-<legend></legend>
+<section id = 'input'>    
+          <form class="form-horizontal">
+          <fieldset>
+       <legend></legend>
+          <div class="control-group">
+            <label class="control-label" for="textinput">name</label>
+            <div class="controls">
+              <input id="tourName"  type="text" placeholder="placeholder" class="input-xlarge">
+            </div>
+          </div>            
+      <div class='row'> 
+        <div class='col-md-4 col-xs-6'> 
+          <div class="control-group">
+            <label class="control-label" for="textinput">hours</label>
+            <div class="controls">
+              <input id="hours" type="text" placeholder="placeholder" class="input-xlarge">
+            </div>
+          </div>
+        </div>
+        <div class='col-md-4 col-xs-6'> 
+          <div class="control-group">
+            <label class="control-label" for="textinput">minuts</label>
+            <div class="controls">
+              <input id="minuts"  type="text" placeholder="placeholder" class="input-xlarge">
+            </div>
+          </div>
+        </div>
+      </div>    
+      <div class='row'> 
+        <div class='col-md-4 col-xs-6'>  
+          <div class="control-group">
 
-<!-- Text input-->
-<div class="control-group">
-  <label class="control-label" for="textinput">Latitude</label>
-  <div class="controls">
-    <input id="lat"  type="text" placeholder="placeholder" class="input-xlarge">
-  </div>
-</div>
+            <div class="controls">
+              <input id="lat"  type="hidden" placeholder="placeholder" class="input-xlarge">
+            </div>
+          </div>
+        </div>
+            
+        <div class='col-md-4 col-xs-6'> 
+          <div class="control-group">
 
-<!-- Text input-->
-<div class="control-group">
-  <label class="control-label" for="textinput">longitude</label>
-  <div class="controls">
-    <input id="lng"  type="text" placeholder="" class="input-xlarge">
-  </div>
-</div>
+            <div class="controls">
+              <input id="lng"  type="hidden" placeholder="" class="input-xlarge">
+            </div>
+          </div>
+        </div>
+      </div>      
+          <!-- Button -->
+          <div class="control-group">
+            <div class="controls">
+              <button id="singlebutton" name="singlebutton" class="btn btn-primary">Go</button>
+            </div>
+          </div>
 
-<!-- Text input-->
-<div class="control-group">
-  <label class="control-label" for="textinput">hours</label>
-  <div class="controls">
-    <input id="hours" type="text" placeholder="placeholder" class="input-xlarge">
-  </div>
-</div>
-
-<!-- Text input-->
-<div class="control-group">
-  <label class="control-label" for="textinput">minuts</label>
-  <div class="controls">
-    <input id="minuts"  type="text" placeholder="placeholder" class="input-xlarge">
-  </div>
-</div>
-  
-<!-- Text input-->
-<div class="control-group">
-  <label class="control-label" for="textinput">name</label>
-  <div class="controls">
-    <input id="tourname"  type="text" placeholder="placeholder" class="input-xlarge">
-  </div>
-</div>  
-
-<!-- Button -->
-<div class="control-group">
-  <div class="controls">
-    <button id="singlebutton" name="singlebutton" class="btn btn-primary">Go</button>
-  </div>
-</div>
-
-</fieldset>
-</form>
-    
- </div>
+          </fieldset>
+            </form>
+</section>  
 <script>
   var socket = io(); 
-  $("#go").on('click', function(e) {
+  $("form").on('submit', function(e) {
+    e.preventDefault();
     var H = $("#hours").val(),
         M = $("#minuts").val(),
         lat = $("#lat").val(),
         lng = $("#lng").val(),
         name = $("#tourName").val();
     var ret= {args : {'H':H, 'M':M, 'lat':lat, 'lng':lng},'name':name};
+    console.log(ret);
     socket.emit('addTour', JSON.stringify(ret));
     alert("new tour was defined");
+    $(location).attr('href', '/');
   });
      
 </script>
