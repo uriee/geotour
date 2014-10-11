@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+        <base href="/" />
+		<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+		<meta charset="utf-8">
+		<title>GeThere</title>
+		<meta name="generator" content="Bootply" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+		<link href="bootstrap.min.css" rel="stylesheet">
+		<link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.min.css" rel="stylesheet">
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.2/jquery.min.js"></script>
+		<script src="bootstrap.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+		<!--[if lt IE 9]>
+			<script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
+		<![endif]-->
+		<link href="styles.css" rel="stylesheet">
+	</head>
+	<body>
+<div class="container-full">
+
+      <div class="row">
+       
+        <div class="col-lg-12 text-center v-center">
+          
+          <h1>GetThere! </h1>
+          <p class="lead">Now, You wanna get to <%= tourname %></p>
+          <p class="lead">So let's get to the Point, Who are you?</p>
+          <p id = 'massage'>  </p>
+          
+          <br><br><br>
+          
+          <form class="col-lg-12">
+            <div class="input-group" style="width:340px;text-align:center;margin:0 auto;">
+            <input id='username' class="form-control input-lg" title="Enter your name" placeholder="Who are you?" type="text">
+            </div>
+             <span class="input-group-btn"><button id='submit' class="btn btn-lg btn-primary" type="button">GeThere</button></span>
+          </form>      
+        </div>
+      </div> <!-- /row -->
+  </div> <!-- /container full -->
+
+
+	<!-- script references -->
+	
+    <script>
+  var socket = io(); 
+      console.log('<%=tourname %>');
+ 
+  $('#submit').on('click',function(e) {
+        //e.preventDefault();
+        ret = {};
+        ret.user = $('#username').val();
+        ret.tour = '<%= tourname %>';
+        socket.emit('addUser', JSON.stringify(ret));
+        $(location).attr('href', '/tour/<%= tourname %>/'+ret.user);
+        return false;
+  });
+    </script>
+	</body>
+</html>

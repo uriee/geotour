@@ -3,6 +3,7 @@ var express = require('express');
 var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
+var os = require("os");
 var redis = require("redis"),
     client = redis.createClient();
 
@@ -109,10 +110,23 @@ app.get('/', function(req, res){
   res.render('welcome',{'massage' : 'all fine!'});
 });
 
+app.get('/geto/:tourname', function(req, res){
+  res.render('byLink',{tourname : req.params.tourname});
+});
+
+app.get('/getLink/:tourname', function(req, res){
+  res.render('link',{
+    tourname : req.params.tourname,
+    url : req.protocol + '://' + req.get('host') 
+  });
+});
+
+
 app.get('/tour/:tourname/:username', function(req, res){
   Get('tour:'+req.params.tourname).then(function(d){
+    console.log("gg:",d)
     var data = JSON.parse(d);
-    if(!d) {
+    if(d===null) {
       res.render('welcome',{'massage' : 'No such Point'});
       return;
     }
@@ -129,6 +143,7 @@ app.get('/tour/:tourname/:username', function(req, res){
   });
 
 });
+
 
 
 io.on('connection', function(socket){

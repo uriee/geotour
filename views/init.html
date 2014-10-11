@@ -97,7 +97,7 @@ function calcRoute(p1,p2) {
             </div>
           </div>            
       <div class='row'> 
-        <div class='col-md-4 col-xs-6'> 
+        <div class=' col-xs-6 col-md-2'> 
           <div class="control-group">
             <label class="control-label" for="textinput">hours</label>
             <div class="controls">
@@ -105,7 +105,7 @@ function calcRoute(p1,p2) {
             </div>
           </div>
         </div>
-        <div class='col-md-4 col-xs-6'> 
+        <div class='col-xs-6 col-md-2'> 
           <div class="control-group">
             <label class="control-label" for="textinput">minuts</label>
             <div class="controls">
@@ -156,7 +156,7 @@ function calcRoute(p1,p2) {
     console.log(ret);
     socket.emit('addTour', JSON.stringify(ret));
     alert("new tour was defined");
-    $(location).attr('href', '/');
+    $(location).attr('href', '/getLink/'+name);
   });
      
 </script>

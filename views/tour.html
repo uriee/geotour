@@ -26,7 +26,8 @@ var rendererOptions = {
 };
 var directionsDisplay = new google.maps.DirectionsRenderer(rendererOptions);;
 var directionsService = new google.maps.DirectionsService();
-var map,getp;
+var map,getp,
+    currentLocations = [];
 
 
 
@@ -39,7 +40,6 @@ function initGeolocation() {
 }
   
 function getGeo() {
-  console.log("in get geo");
 	if (navigator && navigator.geolocation) {
   getp = navigator.geolocation.watchPosition(refresh,null,{maximumAge:5000, timeout:5000, enableHighAccuracy:true});  
 	} else {
@@ -78,7 +78,6 @@ function initialize(position) {
  }
 
 function refresh(position) {
-  console.log('in refresh');
   var Current = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
   var Target = new google.maps.LatLng(<%= lng %>,<%= lat %>);
   calcRoute(Current,Target);
@@ -147,14 +146,15 @@ function computeTotalDistance(result) {
   
   var active = 'images/marker-24.png';
   var nactive = 'images/marker-16.png';
+  
   socket.on('getLocations',function(locations){
     locations = JSON.parse(locations);
-    console.log("getlocations:",locations);
+    currentLocations.forEach(function(L){
+       L.setMap(null);
+    })
     locations.forEach(function(location){
-      console.log ("PPPPPp:",locations.length,location);
       if (location.location){
         var loc = JSON.parse(location.location);
-        console.log("ppo",loc);
         var image  = location.active ? active : nactive;
         var Latlng = new google.maps.LatLng(loc.lat,loc.lng);
         var marker = new google.maps.Marker({
@@ -166,10 +166,10 @@ function computeTotalDistance(result) {
         var markerInfo = new google.maps.InfoWindow({
           content: '<div>'+location.name+'</div>'
         });
+        currentLocations.push(marker);
         google.maps.event.addListener(marker, 'click', function() {
           markerInfo.open(map,marker);
         });
-        console.log("Latlng,marker");
       }
     })
   })
