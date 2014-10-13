@@ -4,85 +4,17 @@ var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var os = require("os");
-var redis = require("redis"),
-    client = redis.createClient();
-
-    client.on("error", function (err) {
-    console.log("error event - " + client.host + ":" + client.port + " - " + err);
-});
-var Smembers = function(key){
-  var d = Q.defer();
-  client.smembers(key,function(err,ret){
-    if(err) {console.log("Err Smembers",key,err); d.reject(err);}
-    else d.resolve(ret);
-  });
-  return d.promise;
-};
-
-var Sadd = function(key,val){
-  var d = Q.defer();
-  client.sadd(key,val,function(err,ret){
-    if(err) {console.log("Err Sadd",key,val,err); d.reject(err);}
-    else d.resolve(ret);
-  });
-  return d.promise;
-};
-
-var Srem = function(key,val){
-  var d = Q.defer();
-  client.srem(key,val,function(err,ret){
-    if(err) {console.log("Err Srem",key,val,err); d.reject(err);}
-    else d.resolve(ret);
-  });
-  return d.promise;
-};
-
-var Sismember = function(key,val){
-  var d = Q.defer();
-  client.sismember(key,val,function(err,ret){
-    if(err) {console.log("Err Sismember",key,val,err); d.reject(err);}
-    else d.resolve(ret);
-  });
-  return d.promise;
-};
-
-var Set = function(key,val){
-  var d = Q.defer();
-  client.set(key,val,function(err,ret){
-    if(err) {console.log("Err hmset",key,val,err); d.reject(err);}
-    else d.resolve(ret);
-  });
-  return d.promise;
-};
-
-var Get = function(key){
-  var d = Q.defer();
-  client.get(key,function(err,ret){
-    if(err) {console.log("Err get",key,err); d.reject(err);}
-    else d.resolve(ret);
-  });
-  return d.promise;
-};
-
-var Hgetall = function(key){
-  var d = Q.defer();
-  client.hgetall(key,function(err,ret){
-    if(err) {console.log("Err hgetall",key,err); d.reject(err);}
-    else d.resolve(ret);
-  });
-  return d.promise;
-};
+var redis = require('./redis')(Q);
 
 function get_locations(users,tour) {
-  return Get('tour:'+tour).then(function(T){
+  return redis.Get('tour:'+tour).then(function(T){
     T = JSON.parse(T);
     var locations = [];
     users.forEach(function(user) {
         var deferred = Q.defer();
-        Get('userLocation:'+user).then(function(ret){
+        redis.Get('userLocation:'+tour+':'+user).then(function(ret){
           var Jret = JSON.parse(ret);
           var diff = Math.pow((parseInt(T.H)*60+parseInt(T.M)) - Jret.time,2);
-          console.log('diff:',diff,(T.H*60+T.M),Jret.time,user);          
           var active = diff < 10 ? 1 : 0;
           deferred.resolve({'name':user,location : ret, active :active});
         });
@@ -123,7 +55,7 @@ app.get('/getLink/:tourname', function(req, res){
 
 
 app.get('/tour/:tourname/:username', function(req, res){
-  Get('tour:'+req.params.tourname).then(function(d){
+  redis.Get('tour:'+req.params.tourname).then(function(d){
     console.log("gg:",d)
     var data = JSON.parse(d);
     if(d===null) {
@@ -131,7 +63,7 @@ app.get('/tour/:tourname/:username', function(req, res){
       return;
     }
     console.log(d);
-    Sadd('tourUsers:'+req.params.tourname,req.params.username);
+    redis.Sadd('tourUsers:'+req.params.tourname,req.params.username);
     res.render('tour', {
       tourname :  req.params.tourname,
       username :  req.params.username,
@@ -155,11 +87,11 @@ io.on('connection', function(socket){
     console.log("kkk:",data,JSON.parse(data));
     var inp = JSON.parse(data);
     console.log('Hmset(tour:','tour:'+inp.name,inp.args);
-    Set('tour:'+inp.name,JSON.stringify(inp.args)).then(run(inp.name));
+    redis.Set('tour:'+inp.name,JSON.stringify(inp.args)).then(run(inp.name));
   });
   socket.on('time', function (inp) {
     inp = JSON.parse(inp);
-    Get('tour:'+inp.tour).then(function(data){
+    redis.Get('tour:'+inp.tour).then(function(data){
       data = JSON.parse(data);
       var minuts = data.M,
           houres = data.H;
@@ -172,11 +104,11 @@ io.on('connection', function(socket){
     obj.lat = data.location.latitude;
     obj.lng = data.location.longitude;
     obj.time = data.H * 60 + data.M;
-    Set('userLocation:'+data.name,JSON.stringify(obj));
+    redis.Set('userLocation:'+data.tour+':'+data.name,JSON.stringify(obj));
   });
   
   socket.on('getLocations', function (tour) {
-    Smembers('tourUsers:'+tour).then(function(ret){
+    redis.Smembers('tourUsers:'+tour).then(function(ret){
       return get_locations(ret,tour);
     }).then( function(locations){
         console.log("loc",locations);
@@ -194,7 +126,7 @@ var run  = function(tour){
   var tourInterval = setInterval(function(){
     var h = -2,
         m = 0;
-    Get('tour:'+tour).then(function(data){
+    redis.Get('tour:'+tour).then(function(data){
       data = JSON.parse(data);
       var minuts = data.M,
           houres = data.H;
@@ -213,7 +145,7 @@ var run  = function(tour){
       }
       data.M = minuts;
       data.H = houres;
-      Set('tour:'+tour,JSON.stringify(data)).then();
+      redis.Set('tour:'+tour,JSON.stringify(data)).then();
     });  
   },60000);
 }

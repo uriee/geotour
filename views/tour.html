@@ -1,186 +1,216 @@
 <!DOCTYPE html>
 <html>
-  <head>
+
+<head>
     <base href="/" />
-		<meta http-equiv="content-type" content="text/html; charset=UTF-8">
-		<meta charset="utf-8">     
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
-	  <link href="bootstrap.min.css"  type="text/css"  rel="stylesheet">    
+    <link href="bootstrap.min.css" type="text/css" rel="stylesheet">
     <title>GeThere</title>
     <style>
-      html, body, #map-canvas {
-        height: 100%;
-        margin: 0px;
-        padding: 0px
-      }
-      #map_canvas {background: transparent url(images/load.gif) no-repeat center center;}
+        html,
+        body,
+        #map-canvas {
+            height: 100%;
+            margin: 0px;
+            padding: 0px
+        }
+        #map_canvas {
+            background: transparent url(images/load.gif) no-repeat center center;
+        }
     </style>
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://maps.googleapis.com/maps/api/js?sensor=true"></script>
     <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
     <script>
-
-var socket = io();      
-var rendererOptions = {
-  draggable: false
-};
-var directionsDisplay = new google.maps.DirectionsRenderer(rendererOptions);;
-var directionsService = new google.maps.DirectionsService();
-var map,getp,
-    currentLocations = [];
-
+        var socket = io();
+        var rendererOptions = {
+            draggable: false
+        };
+        var directionsDisplay = new google.maps.DirectionsRenderer(rendererOptions);;
+        var directionsService = new google.maps.DirectionsService();
+        var map, getp,
+            currentLocations = [];
 
 
-function initGeolocation() {
-	if (navigator && navigator.geolocation) {
-  var getp = navigator.geolocation.getCurrentPosition(initialize,gpsalert,{maximumAge:0, timeout:5000, enableHighAccuracy:true});  
-	} else {
-  		console.log('Geolocation is not supported');
-	}
-}
-  
-function getGeo() {
-	if (navigator && navigator.geolocation) {
-  getp = navigator.geolocation.watchPosition(refresh,null,{maximumAge:5000, timeout:5000, enableHighAccuracy:true});  
-	} else {
-  		console.log('Geolocation is not supported');
-	}
-}      
-  
-var hours =  <%= H %>,
-    minuts =  <%= M %>;
-    
-function start(){
-  initGeolocation();
-  setTimeout(getGeo,1500);
-  //setInterval(getGeo,180000);
-  setInterval(function(){
-    socket.emit('time',JSON.stringify({tour : '<%= tourname %>'}));
-  },60000);
-  $('#timer').text( hours+':'+minuts);
-};
-      
- function gpsalert() {alert("You need that GPS man!");}
-      
-function initialize(position) {
-  var Current = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
-  var Target = new google.maps.LatLng(<%= lng %>,<%= lat %>);
-  var mapOptions = {
-    zoom: 7,
-    center: Current
-  };
-  map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
-  directionsDisplay.setMap(map);
-  directionsDisplay.setPanel(document.getElementById('directionsPanel'));
 
-  calcRoute(Current,Target);
-  socket.emit('location',JSON.stringify({name : '<%= username %>', location : position.coords , H : hours, M : minuts}));
- }
+        function initGeolocation() {
+            if (navigator && navigator.geolocation) {
+                var getp = navigator.geolocation.getCurrentPosition(initialize, gpsalert, {
+                    maximumAge: 0,
+                    timeout: 5000,
+                    enableHighAccuracy: true
+                });
+            } else {
+                console.log('Geolocation is not supported');
+            }
+        }
 
-function refresh(position) {
-  var Current = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
-  var Target = new google.maps.LatLng(<%= lng %>,<%= lat %>);
-  calcRoute(Current,Target);
-  socket.emit('location',JSON.stringify({name : '<%= username %>', location : position.coords, H : hours, M : minuts}));
-}      
+        function getGeo() {
+            if (navigator && navigator.geolocation) {
+                getp = navigator.geolocation.watchPosition(refresh, null, {
+                    maximumAge: 5000,
+                    timeout: 5000,
+                    enableHighAccuracy: true
+                });
+            } else {
+                console.log('Geolocation is not supported');
+            }
+        }
 
-function calcRoute(p1,p2) {
+        var hours = <%= H %> ,
+            minuts = <%= M %> ;
 
-  var request = {
-    origin: p1,
-    destination: p2,
-    travelMode: google.maps.TravelMode.WALKING
-  };
-  directionsService.route(request, function(response, status) {
-    if (status == google.maps.DirectionsStatus.OK) {
-      directionsDisplay.setDirections(response);
-    }
-  });
-}
+        function start() {
+            initGeolocation();
+            setTimeout(getGeo, 1500);
+            //setInterval(getGeo,180000);
+            setInterval(function() {
+                socket.emit('time', JSON.stringify({
+                    tour: '<%= tourname %>'
+                }));
+            }, 60000);
+            $('#timer').text(hours + ':' + minuts);
+        };
 
-function computeTotalDistance(result) {
-  var total = 0;
-  var myroute = result.routes[0];
-  for (var i = 0; i < myroute.legs.length; i++) {
-    total += myroute.legs[i].distance.value;
-  }
-  total = total / 1000.0;
-  document.getElementById('total').innerHTML = total + ' km';
-}
+        function gpsalert() {
+            alert("You need that GPS man!");
+        }
 
-/*google.maps.event.addDomListener(window, 'load', initialize);*/
+        function initialize(position) {
+            var Current = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+            var Target = new google.maps.LatLng( <%= lng %> , <%= lat %> );
+            var mapOptions = {
+                zoom: 7,
+                center: Current
+            };
+            map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+            directionsDisplay.setMap(map);
+            directionsDisplay.setPanel(document.getElementById('directionsPanel'));
 
+            calcRoute(Current, Target);
+            socket.emit('location', JSON.stringify({
+                tour: '<%= tourname %>',
+                name: '<%= username %>',
+                location: position.coords,
+                H: hours,
+                M: minuts
+            }));
+        }
+
+        function refresh(position) {
+            var Current = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+            var Target = new google.maps.LatLng( <%= lng %> , <%= lat %> );
+            calcRoute(Current, Target);
+            socket.emit('location', JSON.stringify({
+                tour: '<%= tourname %>',
+                name: '<%= username %>',
+                location: position.coords,
+                H: hours,
+                M: minuts
+            }));
+        }
+
+        function calcRoute(p1, p2) {
+
+            var request = {
+                origin: p1,
+                destination: p2,
+                travelMode: google.maps.TravelMode.WALKING
+            };
+            directionsService.route(request, function(response, status) {
+                if (status == google.maps.DirectionsStatus.OK) {
+                    directionsDisplay.setDirections(response);
+                }
+            });
+        }
+
+        function computeTotalDistance(result) {
+            var total = 0;
+            var myroute = result.routes[0];
+            for (var i = 0; i < myroute.legs.length; i++) {
+                total += myroute.legs[i].distance.value;
+            }
+            total = total / 1000.0;
+            document.getElementById('total').innerHTML = total + ' km';
+        }
+
+        /*google.maps.event.addDomListener(window, 'load', initialize);*/
     </script>
-  </head>
-  <body  onload="javascript:start()">  
+</head>
 
-        <div class="col-md-12 column">
-          <div class="row clearfix">
+<body onload="javascript:start()">
+
+    <div class="col-md-12 column">
+        <div class="row clearfix">
             <div class="col-xs-3 column">
-              <button  id='refresh' class="btn btn-primary">Refresh</button>
+                <button id='refresh' class="btn btn-primary">Refresh</button>
             </div>
             <div class="col-xs-5 column">
-              <button  id='getLocations' class="btn btn-primary">where is everybody?</button>
-            </div>            
+                <button id='getLocations' class="btn btn-primary">where is everybody?</button>
+            </div>
             <div class="col-xs-4 column">
-              <h3 id = 'timer' class="text-muted text-center">
+                <h3 id='timer' class="text-muted text-center">
                 timer
               </h3>
             </div>
-          </div>
-        </div> 
+        </div>
+    </div>
 
 
     <div id="map-canvas" style="height:60%;top:10px"></div>
     <div id="directionsPanel" style="top:1070px">
-      </div>
-  <div>  <p>Total Distance: <span id="total"></span></p></div>      
-<script>
-  
-  socket.on('time',function(data){
-    var data = JSON.parse(data);
-    hours = data.H;
-    minuts = data.M;
-    $('#timer').text( hours+':'+minuts);
-  })
-  
-  var active = 'images/marker-24.png';
-  var nactive = 'images/marker-16.png';
-  
-  socket.on('getLocations',function(locations){
-    locations = JSON.parse(locations);
-    currentLocations.forEach(function(L){
-       L.setMap(null);
-    })
-    locations.forEach(function(location){
-      if (location.location){
-        var loc = JSON.parse(location.location);
-        var image  = location.active ? active : nactive;
-        var Latlng = new google.maps.LatLng(loc.lat,loc.lng);
-        var marker = new google.maps.Marker({
-          position: Latlng,
-          title: location.name,
-          icon: image,
-          map : map
+    </div>
+    <div>
+        <p>Total Distance: <span id="total"></span>
+        </p>
+    </div>
+    <script>
+        socket.on('time', function(data) {
+            var data = JSON.parse(data);
+            hours = data.H;
+            minuts = data.M;
+            $('#timer').text(hours + ':' + minuts);
+        })
+
+        var active = 'images/marker-24.png';
+        var nactive = 'images/marker-16.png';
+
+        socket.on('getLocations', function(locations) {
+            locations = JSON.parse(locations);
+            currentLocations.forEach(function(L) {
+                L.setMap(null);
+            })
+            locations.forEach(function(location) {
+                if (location.location) {
+                    var loc = JSON.parse(location.location);
+                    var image = location.active ? active : nactive;
+                    var Latlng = new google.maps.LatLng(loc.lat, loc.lng);
+                    var marker = new google.maps.Marker({
+                        position: Latlng,
+                        title: location.name,
+                        icon: image,
+                        map: map
+                    });
+                    var markerInfo = new google.maps.InfoWindow({
+                        content: '<div>' + location.name + '</div>'
+                    });
+                    currentLocations.push(marker);
+                    google.maps.event.addListener(marker, 'click', function() {
+                        markerInfo.open(map, marker);
+                    });
+                }
+            })
+        })
+        $("#refresh").on('click', function() {
+            getGeo()
         });
-        var markerInfo = new google.maps.InfoWindow({
-          content: '<div>'+location.name+'</div>'
+        $("#getLocations").on('click', function() {
+            navigator.geolocation.clearWatch(getp);
+            socket.emit('getLocations', '<%= tourname %>');
         });
-        currentLocations.push(marker);
-        google.maps.event.addListener(marker, 'click', function() {
-          markerInfo.open(map,marker);
-        });
-      }
-    })
-  })
-  $("#refresh").on('click', function() {
-    getGeo()
-  });
-  $("#getLocations").on('click', function() {
-    navigator.geolocation.clearWatch(getp);
-    socket.emit('getLocations','<%= tourname %>');
-  });  
-  
-</script>
-  </body>
+    </script>
+</body>
+
 </html>

@@ -1,164 +1,184 @@
 <!DOCTYPE html>
 <html>
-  <head>
+
+<head>
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
-	  <link href="bootstrap.min.css"  type="text/css"  rel="stylesheet">     
+    <link href="bootstrap.min.css" type="text/css" rel="stylesheet">
     <meta charset="utf-8">
     <title>Get To The Point</title>
     <style>
-      html, body, #map-canvas {
-        height: 100%;
-        margin: 4px;
-        padding: 4px;
-      }
+        html,
+        body,
+        #map-canvas {
+            height: 100%;
+            margin: 4px;
+            padding: 4px;
+        }
     </style>
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://maps.googleapis.com/maps/api/js?sensor=true"></script>
     <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jquery.bootstrapvalidator/0.5.2/css/bootstrapValidator.min.css" />
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery.bootstrapvalidator/0.5.2/js/bootstrapValidator.min.js"></script>
     <script>
-
-var rendererOptions = {
-  draggable: true
-};
-var directionsDisplay = new google.maps.DirectionsRenderer(rendererOptions);;
-var directionsService = new google.maps.DirectionsService();
-var map;
-
+        var rendererOptions = {
+            draggable: true
+        };
+        var directionsDisplay = new google.maps.DirectionsRenderer(rendererOptions);;
+        var directionsService = new google.maps.DirectionsService();
+        var map, latitude, longitude;
 
 
-function initGeolocation() {
-	if (navigator && navigator.geolocation) {
-    var getp = navigator.geolocation.getCurrentPosition(initialize,errorCallback);  
-    /*
-	var watchId = navigator.geolocation.watchPosition(initialize, 
-                                                  errorCallback,
-                                                  {enableHighAccuracy:false,timeout:60000,maximumAge:60000});
-*/
-	} else {
-  		console.log('Geolocation is not supported');
-	}
-}
 
- function errorCallback() {console.log("error with navigator object");}
-      
-function initialize(position) {
-  var myLatlng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
-  var TLatlng = new google.maps.LatLng(position.coords.latitude+0.002, position.coords.longitude+0.002);
-  var mapOptions = {
-    zoom: 7,
-    center: myLatlng
-  };
-  map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
-  directionsDisplay.setMap(map);
-  directionsDisplay.setPanel(document.getElementById('directionsPanel'));
+        function initGeolocation() {
+            if (navigator && navigator.geolocation) {
+                var getp = navigator.geolocation.getCurrentPosition(initialize, errorCallback);
+            } else {
+                console.log('Geolocation is not supported');
+            }
+        }
 
-  google.maps.event.addListener(directionsDisplay, 'directions_changed', function() {
-    var newpos = directionsDisplay.directions;
-    console.log(directionsDisplay);
-    //document.getElementById('lat').value = newpos.oc.destination.B;
-    //document.getElementById('lng').value = newpos.oc.destination.k;
-    document.getElementById('lat').value = newpos.routes[0].legs[0].end_location.B;
-    document.getElementById('lng').value = newpos.routes[0].legs[0].end_location.k;    
-  });
+        function errorCallback() {
+            console.log("error with navigator object");
+        }
 
-  calcRoute(myLatlng,TLatlng);
-}
+        function initialize(position) {
+            var myLatlng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+            var TLatlng = new google.maps.LatLng(position.coords.latitude + 0.002, position.coords.longitude + 0.002);
+            var mapOptions = {
+                zoom: 7,
+                center: myLatlng
+            };
+            map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+            directionsDisplay.setMap(map);
+            directionsDisplay.setPanel(document.getElementById('directionsPanel'));
 
-function calcRoute(p1,p2) {
+            google.maps.event.addListener(directionsDisplay, 'directions_changed', function() {
+                var newpos = directionsDisplay.directions;
+                console.log(directionsDisplay);
+                //document.getElementById('lat').value = newpos.oc.destination.B;
+                //document.getElementById('lng').value = newpos.oc.destination.k;
+                latitude = newpos.routes[0].legs[0].end_location.B;
+                longitude = newpos.routes[0].legs[0].end_location.k;
+            });
 
-  var request = {
-    origin: p1,
-    destination: p2,
-    travelMode: google.maps.TravelMode.WALKING
-  };
-  directionsService.route(request, function(response, status) {
-    if (status == google.maps.DirectionsStatus.OK) {
-      directionsDisplay.setDirections(response);
-    }
-  });
-}
+            calcRoute(myLatlng, TLatlng);
+        }
 
-/*google.maps.event.addDomListener(window, 'load', initialize);*/
+        function calcRoute(p1, p2) {
 
+            var request = {
+                origin: p1,
+                destination: p2,
+                travelMode: google.maps.TravelMode.WALKING
+            };
+            directionsService.route(request, function(response, status) {
+                if (status == google.maps.DirectionsStatus.OK) {
+                    directionsDisplay.setDirections(response);
+                }
+            });
+        }
     </script>
-  </head>
-  <body  onload="javascript:initGeolocation()">
-    <div id="map-canvas" style="height:60%;top:5px"></div>    
+</head>
 
-<section id = 'input'>    
-  Drag point B to the Point need to be marked.
-          <form class="form-horizontal">
-          <fieldset>
-       <legend></legend>
-          <div class="control-group">
-            <label class="control-label" for="textinput">name</label>
-            <div class="controls">
-              <input id="tourName"  type="text" placeholder="placeholder" class="input-xlarge">
-            </div>
-          </div>            
-      <div class='row'> 
-        <div class=' col-xs-6 col-md-2'> 
-          <div class="control-group">
-            <label class="control-label" for="textinput">hours</label>
-            <div class="controls">
-              <input id="hours" type="text" placeholder="placeholder" class="input-xlarge">
-            </div>
-          </div>
-        </div>
-        <div class='col-xs-6 col-md-2'> 
-          <div class="control-group">
-            <label class="control-label" for="textinput">minuts</label>
-            <div class="controls">
-              <input id="minuts"  type="text" placeholder="placeholder" class="input-xlarge">
-            </div>
-          </div>
-        </div>
-      </div>    
-      <div class='row'> 
-        <div class='col-md-4 col-xs-6'>  
-          <div class="control-group">
+<body onload="javascript:initGeolocation()">
+    <div id="map-canvas" style="height:60%;top:5px"></div>
 
-            <div class="controls">
-              <input id="lat"  type="hidden" placeholder="placeholder" class="input-xlarge">
+    <section id='input'>
+        Drag point B to the Point need to be marked.
+        <form name='iform' id='iform' class="form-horizontal">
+            <div class="form-group">
+                <div>
+                    <label class="control-label" for="textinput">name</label>
+                    <input name='tourName' id="tourName" type="text" placeholder="What is your Point? (name)" class="form-control ">
+                </div>
+                <div class='row'>
+                    <div class=' col-xs-6 col-md-2'>
+                        <label class="control-label" for="textinput">hours</label>
+                        <input name='hours' id="hours" type="text" placeholder="I want to meet in X hours." class="form-control">
+                    </div>
+                    <div class='col-xs-6 col-md-2'>
+                        <label class="control-label" for="textinput">minuts</label>
+                        <input name='minuts' id="minuts" type="text" placeholder="And minuts." class="form-control ">
+                    </div>
+                </div>
+                <!-- Button -->
+                <br>
+                <button type="submit" class="btn btn-primary" >Make Your Point!</button>              
             </div>
-          </div>
-        </div>
-            
-        <div class='col-md-4 col-xs-6'> 
-          <div class="control-group">
+        </form>
+    </section>
+    <script>
+        var socket = io();
+        $("form").on('submit', function(e) {
+            e.preventDefault();
+            var H = $("#hours").val(),
+                M = $("#minuts").val(),
+                name = $("#tourName").val();
+            var ret = {
+                args: {
+                    'H': H,
+                    'M': M,
+                    'lat': latitude,
+                    'lng': longitude
+                },
+                'name': name
+            };
+            console.log(ret);
+            socket.emit('addTour', JSON.stringify(ret));
+            alert("new tour was defined");
+            $(location).attr('href', '/getLink/' + name);
+        });
 
-            <div class="controls">
-              <input id="lng"  type="hidden" placeholder="" class="input-xlarge">
-            </div>
-          </div>
-        </div>
-      </div>      
-          <!-- Button -->
-          <div class="control-group">
-            <div class="controls">
-              <button id="singlebutton" name="singlebutton" class="btn btn-primary">Go</button>
-            </div>
-          </div>
+      $(document).ready(function() {
+    $('form').bootstrapValidator({
+        message: 'This value is not valid',
+        feedbackIcons: {
+            valid: 'glyphicon glyphicon-ok',
+            invalid: 'glyphicon glyphicon-remove',
+            validating: 'glyphicon glyphicon-refresh'
+        },
+        fields: {
+            tourName: {
+                message: 'The username is not valid',
+                validators: {
+                    notEmpty: {
+                        message: 'The Point name is required and cannot be empty'
+                    },
+                    stringLength: {
+                        min: 1,
+                        max: 25,
+                        message: 'The Point name must be more than 1 and less than 25 characters long'
+                    },
+                }
+            },
+            hours: {
+                message: 'The username is not valid',
+                validators: {
+                    notEmpty: {
+                        message: 'The Point name is required and cannot be empty'
+                    },
+                    integer: {
+                        message: 'The value is not an integer'
+                    }
+                }
+            },
+            minuts: {
+                message: 'The username is not valid',
+                validators: {
+                    notEmpty: {
+                        message: 'The Point name is required and cannot be empty'
+                    },
+                    integer: {
+                        message: 'The value is not an integer'
+                    }
+                }
+            },          
 
-          </fieldset>
-            </form>
-</section>  
-<script>
-  var socket = io(); 
-  $("form").on('submit', function(e) {
-    e.preventDefault();
-    var H = $("#hours").val(),
-        M = $("#minuts").val(),
-        lat = $("#lat").val(),
-        lng = $("#lng").val(),
-        name = $("#tourName").val();
-    var ret= {args : {'H':H, 'M':M, 'lat':lat, 'lng':lng},'name':name};
-    console.log(ret);
-    socket.emit('addTour', JSON.stringify(ret));
-    alert("new tour was defined");
-    $(location).attr('href', '/getLink/'+name);
-  });
-     
-</script>
-  </body>
+        }
+    });
+});
+    </script>
+</body>
+
 </html>
