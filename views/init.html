@@ -20,6 +20,7 @@
     <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
     <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jquery.bootstrapvalidator/0.5.2/css/bootstrapValidator.min.css" />
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery.bootstrapvalidator/0.5.2/js/bootstrapValidator.min.js"></script>
+  
     <script>
         var rendererOptions = {
             draggable: true
@@ -112,6 +113,7 @@
         var socket = io();
         $("form").on('submit', function(e) {
             e.preventDefault();
+            e.stopImmediatePropagation();
             var H = $("#hours").val(),
                 M = $("#minuts").val(),
                 name = $("#tourName").val();
@@ -124,14 +126,26 @@
                 },
                 'name': name
             };
-            console.log(ret);
+            console.log("lll",ret);
             socket.emit('addTour', JSON.stringify(ret));
-            alert("new tour was defined");
-            $(location).attr('href', '/getLink/' + name);
         });
+      
+socket.on('validated',function(data){
+  console.log('validate',data);
+  if(data==='1') {
+    alert("new tour was defined");
+    $(location).attr('href', '/share/'+$("#tourName").val());
+  }
+  if(data==='2') {
+    alert("Somthing Wrong with your parameters");
+  } 
+  if(data==='0') {
+    alert("Point Name is allready taken");
+  }  
+})      
 
-      $(document).ready(function() {
-    $('form').bootstrapValidator({
+$(document).ready(function() {
+   $('form').bootstrapValidator({
         message: 'This value is not valid',
         feedbackIcons: {
             valid: 'glyphicon glyphicon-ok',

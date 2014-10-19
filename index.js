@@ -30,6 +30,8 @@ app.engine('.html', require('ejs').__express);
 app.set('views', __dirname + '/views');
 app.set('view engine', 'html');
 
+/*---------------Routers--------------------------------------*/
+
 app.get('/init', function(req, res){
   res.render('init', {
     users: 4,
@@ -39,20 +41,19 @@ app.get('/init', function(req, res){
 });
 
 app.get('/', function(req, res){
-  res.render('welcome',{'massage' : 'all fine!'});
+  res.render('welcome',{'massage' : ''});
 });
 
 app.get('/geto/:tourname', function(req, res){
   res.render('byLink',{tourname : req.params.tourname});
 });
 
-app.get('/getLink/:tourname', function(req, res){
+app.get('/share/:tourname', function(req, res){
   res.render('link',{
     tourname : req.params.tourname,
     url : req.protocol + '://' + req.get('host') 
   });
 });
-
 
 app.get('/tour/:tourname/:username', function(req, res){
   redis.Get('tour:'+req.params.tourname).then(function(d){
@@ -76,19 +77,35 @@ app.get('/tour/:tourname/:username', function(req, res){
 
 });
 
-
+/*-----------------------Socket Connection-------------------------------*/
 
 io.on('connection', function(socket){
  console.log('a user connected');
   socket.on('disconnect', function(){
     console.log('user disconnected');
   });  
+  
   socket.on('addTour', function (data) {
     console.log("kkk:",data,JSON.parse(data));
-    var inp = JSON.parse(data);
-    console.log('Hmset(tour:','tour:'+inp.name,inp.args);
-    redis.Set('tour:'+inp.name,JSON.stringify(inp.args)).then(run(inp.name));
+    var inp = JSON.parse(data)
+    redis.Get('tour:'+inp.name).then(function(T){
+      if(T) {
+        socket.emit('validated', '0');
+        return 0;
+      }
+      else {
+        if (parseInt( inp.args.H) >= 0 && parseInt( inp.args.M) >= 0 && inp.name > ''){
+          redis.Set('tour:'+inp.name,JSON.stringify(inp.args)).then(function(){
+            run(inp.name);
+            socket.emit('validated', '1');
+          });
+        }  
+        else socket.emit('validated', '2');
+      }
+    });
   });
+  
+ 
   socket.on('time', function (inp) {
     inp = JSON.parse(inp);
     redis.Get('tour:'+inp.tour).then(function(data){
@@ -98,6 +115,7 @@ io.on('connection', function(socket){
       socket.emit('time',JSON.stringify({H: houres, M: minuts}));
      });  
   });
+  
   socket.on('location', function (data) {
      data = JSON.parse(data);
     var obj = {}
@@ -105,8 +123,10 @@ io.on('connection', function(socket){
     obj.lng = data.location.longitude;
     obj.time = data.H * 60 + data.M;
     redis.Set('userLocation:'+data.tour+':'+data.name,JSON.stringify(obj));
+    socket.join(data.tour);
   });
   
+   
   socket.on('getLocations', function (tour) {
     redis.Smembers('tourUsers:'+tour).then(function(ret){
       return get_locations(ret,tour);
@@ -117,10 +137,11 @@ io.on('connection', function(socket){
   });
 });
 
+/*---------------------------------------------------------------------------*/
+
 http.listen(3000, function(){
   console.log('listening on *:3000');
 });
-
 
 var run  = function(tour){
   var tourInterval = setInterval(function(){
