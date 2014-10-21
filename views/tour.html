@@ -19,6 +19,7 @@
         #map_canvas {
             background: transparent url(images/load.gif) no-repeat center center;
         }
+        #footer { background: #FFF; padding: 3px; position: fixed; bottom: 0; width: 100%; }
     </style>
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://maps.googleapis.com/maps/api/js?sensor=true"></script>
@@ -144,13 +145,13 @@
 
     <div class="col-md-12 column">
         <div class="row clearfix">
-            <div class="col-xs-3 column">
-                <button id='refresh' class="btn btn-primary">Refresh</button>
+            <div class="col-xs-3 column ">
+                GeThere
             </div>
-            <div class="col-xs-5 column">
-                <button id='getLocations' class="btn btn-primary">where is everybody?</button>
+            <div class="col-xs-5 column centered">
+              <h4><%= username %> goto <%= tourname %></h4>
             </div>
-            <div class="col-xs-4 column">
+            <div class="col-xs-4 column centered">
                 <h3 id='timer' class="text-muted text-center">
                 timer
               </h3>
@@ -159,13 +160,23 @@
     </div>
 
 
-    <div id="map-canvas" style="height:60%;top:10px"></div>
-    <div id="directionsPanel" style="top:1070px">
+    <div id="map-canvas" style="height:85%;"></div>
+    <div id="directionsPanel" style=""></div>
+
+    <div class="col-md-12 column" id='footer' name='footer'>
+        <div class="row clearfix">
+            <div class="col-xs-3 column">
+                <button id='refresh' class="btn btn-primary">Refresh</button>
+            </div>
+            <div class="col-xs-5 column">
+                <button id='getLocations' class="btn btn-primary">where is everybody?</button>
+            </div>
+            <div class="col-xs-4 column">
+              <button id='directions' class="btn btn-primary">Direct me</button>
+            </div>
+        </div>
     </div>
-    <div>
-        <p>Total Distance: <span id="total"></span>
-        </p>
-    </div>
+  
     <script>
         socket.on('time', function(data) {
             var data = JSON.parse(data);
