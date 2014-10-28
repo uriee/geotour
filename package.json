@@ -1,20 +1,19 @@
 {
-  "name": "cloudconnect",
-  "version": "0.0.0",
-  "description": "Personal Site",
-  "main": "app.js",
+  "name": "geThere",
+  "version": "0.1.0",
+  "description": "share a destination",
+  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
-    "protfolio",
-    "Kibbutznik.net"
+    "geolocation",
+    "social"
   ],
   "author": "uri even ezra",
   "license": "ISC",
   "dependencies": {
     "express": "= 3.x",
-    "fibers": "^1.0.1",
     "q": "^1.0.1",
     "redis": "^0.11.0",
     "socket.io": "^1.0.6"
