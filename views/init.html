@@ -14,11 +14,13 @@
       margin: 4px;
       padding: 4px;
     }
+   
   </style>
   <script src="/socket.io/socket.io.js"></script>
   <script src="https://maps.googleapis.com/maps/api/js?sensor=true"></script>
   <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
   <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jquery.bootstrapvalidator/0.5.2/css/bootstrapValidator.min.css" />
+	<link href="styles.css" rel="stylesheet">  
   <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery.bootstrapvalidator/0.5.2/js/bootstrapValidator.min.js"></script>
 
   <script>
@@ -45,7 +47,7 @@
 
     function initialize(position) {
       var myLatlng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
-      var TLatlng = new google.maps.LatLng(position.coords.latitude + 0.002, position.coords.longitude + 0.002);
+      var TLatlng = new google.maps.LatLng(position.coords.latitude + 0.002, position.coords.longitude );
       var mapOptions = {
         zoom: 7,
         center: myLatlng
@@ -82,30 +84,29 @@
   </script>
 </head>
 
-<body onload="javascript:initGeolocation()">
+<body onload="javascript:initGeolocation()" style = " background-color:#aaadee;">
   <div id="map-canvas" style="height:60%;top:5px"></div>
 
-  <section id='input'>
+  <section id='input' class = 'center-me'>
     Drag point B to the Point need to be marked.
     <form name='iform' id='iform' class="form-horizontal">
-      <div class="form-group">
+      <div class="form-group inp">
         <div>
           <label class="control-label" for="textinput">name</label>
           <input name='tourName' id="tourName" type="text" placeholder="What is your Point? (name)" class="form-control ">
         </div>
         <div class='row'>
-          <div class=' col-xs-6 col-md-2'>
+          <div class='col-xs-6 col-sm-6 col-md-2 col-lg-2'>
             <label class="control-label" for="textinput">hours</label>
             <input name='hours' id="hours" type="text" placeholder="I want to meet in X hours." class="form-control">
           </div>
-          <div class='col-xs-6 col-md-2'>
+          <div class='col-xs-6 col-sm-6 col-md-2 col-lg-2'>
             <label class="control-label" for="textinput">minuts</label>
             <input name='minuts' id="minuts" type="text" placeholder="And minuts." class="form-control ">
           </div>
         </div>
         <!-- Button -->
-        <br>
-        <button type="submit" class="btn btn-primary">Make Your Point!</button>
+        <button id = 'submit' type="submit" class="btn btn-primary h-center ">Make Your Point!</button>
       </div>
     </form>
   </section>

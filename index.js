@@ -67,7 +67,6 @@ app.get('/share/:tourname', function(req, res) {
 
 app.get('/tour/:tourname/:username', function(req, res) {
     redis.Get('tour:' + req.params.tourname).then(function(d) {
-        console.log("gg:", d);
         var data = JSON.parse(d);
         if (d === null) {
             res.render('welcome', {
@@ -75,7 +74,6 @@ app.get('/tour/:tourname/:username', function(req, res) {
             });
             return;
         }
-        console.log(d);
         redis.Sadd('tourUsers:' + req.params.tourname, req.params.username);
         res.render('tour', {
             tourname: req.params.tourname,
@@ -96,15 +94,14 @@ app.get('/*', function(req, res) {
 });
 
 /*-----------------------Socket Connection-------------------------------*/
-
+app.userCount = 0;
 io.on('connection', function(socket) {
-    console.log('a user connected');
+  console.log('userCount:',app.userCount++ + 1);
     socket.on('disconnect', function() {
-        console.log('user disconnected');
+      console.log('userCount:',app.userCount-- - 1);
     });
 
     socket.on('addTour', function(data) {
-        console.log("kkk:", data, JSON.parse(data));
         var inp = JSON.parse(data);
         redis.Get('tour:' + inp.name).then(function(T) {
             if (T) {
@@ -150,7 +147,6 @@ io.on('connection', function(socket) {
         redis.Smembers('tourUsers:' + tour).then(function(ret) {
             return get_locations(ret, tour);
         }).then(function(locations) {
-            console.log("loc", locations);
             socket.emit('getLocations', JSON.stringify(locations));
         });
     });
